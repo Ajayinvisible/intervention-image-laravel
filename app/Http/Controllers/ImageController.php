@@ -47,10 +47,7 @@ class ImageController extends Controller
         $thubnail = $imageManager->read('images/' . $imageName);
 
         // Resize the image to a width of 250 and constrain aspect ratio (auto height)
-        $thubnail->scale(250);
-        // $thubnail->resize(600, 600);
-
-        $webpImage =
+        $thubnail->cover(600, 600, 'top');
 
         $thubnail->save(public_path('images/thumbnails/' . $imageName));
         // Save the image name and path to the database
