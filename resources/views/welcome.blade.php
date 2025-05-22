@@ -57,7 +57,7 @@
                 <div class="col-xl-12 m-auto">
                     <h4 class="text-center">Crop Image Preview</h4>
                     @forelse ($cropImages as $crop)
-                        <img src="{{ asset($crop->image) }}" width="250px" class="rounded" alt="">
+                        <img src="{{ asset($crop->image) }}" width="250px" class="rounded mb-3" alt="">
                     @empty
                         <div class="alert alert-danger alert-dismissible fade show" role="alert">
                             No Image Found

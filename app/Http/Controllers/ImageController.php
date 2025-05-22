@@ -14,7 +14,7 @@ class ImageController extends Controller
     public function fileUpload()
     {
         $cropImages = InterventionCropImage::orderBy('created_at', 'desc')->get();
-        return view('welcome',[
+        return view('welcome', [
             'cropImages' => $cropImages
         ]);
     }
@@ -26,46 +26,46 @@ class ImageController extends Controller
             'image' => 'required|image|mimes:png,jpg,jpeg,gif,svg,webp|max:2048',
         ]);
 
-        // upload image
+        // Upload image
         $image = $request->file('image');
-        $imageName = time() . '_' . Str::random(10) . '.' . $image->getClientOriginalExtension();
-        $imagePath = public_path('images');
-        $image->move($imagePath, $imageName);
+        $originalExtension = $image->getClientOriginalExtension();
+        $imageName = time() . '_' . Str::random(10);
+        $imageWithExtension = $imageName . '.' . $originalExtension;
 
+        // Save original image temporarily
+        $imagePath = public_path('images');
+        $image->move($imagePath, $imageWithExtension);
+
+        // Ensure thumbnail folder exists
         $thumbnailFolder = public_path('images/thumbnails');
-        // Check if the thumbnail directory exists, if not create it
         if (!File::exists($thumbnailFolder)) {
             File::makeDirectory($thumbnailFolder, 0755, true);
         }
 
-        $cropImage = new InterventionCropImage();
-        // Resize the image
-        // create new manager instance with desired driver and default configuration
+        // Create Intervention Image Manager
         $imageManager = new ImageManager(new Driver());
 
-        // Reading uploaded image from local file system (images)
-        $thubnail = $imageManager->read('images/' . $imageName);
+        // Read original image correctly
+        $thumbnail = $imageManager->read(public_path('images/' . $imageWithExtension));
 
-        // Resize the image to a width of 250 and constrain aspect ratio (auto height)
-        $thubnail->scale(250);
-        // $thubnail->resize(600, 600);
+        // Resize while keeping aspect ratio
+        $thumbnail->scale(250);
 
-        $webpImage =
+        // Convert and save as WebP
+        $webpImage = $imageName . '.webp';
+        $thumbnail->save(public_path('images/thumbnails/' . $webpImage));
 
-        $thubnail->save(public_path('images/thumbnails/' . $imageName));
-        // Save the image name and path to the database
-        $cropImage->image = 'images/thumbnails/' . $imageName;
+        // Save to DB
+        $cropImage = new InterventionCropImage();
+        $cropImage->image = 'images/thumbnails/' . $webpImage;
         $response = $cropImage->save();
 
-        if($response){
-            // Delete the original image from the public directory
-            File::delete(public_path('images/' . $imageName));
+        // Delete original
+        if ($response) {
+            File::delete(public_path('images/' . $imageWithExtension));
+            return back()->with('success', 'Image uploaded and converted to WebP')->with('image', $webpImage);
         }
 
-        // Save the original image to the public directory
-        if($response){
-            return back()->with('success', 'Image uploaded successfully & resized')->with('image', $imageName);
-        }
         return back()->with('error', 'Image upload failed');
     }
 }
