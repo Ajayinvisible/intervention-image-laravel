@@ -50,8 +50,6 @@ class ImageController extends Controller
         $thubnail->scale(250);
         // $thubnail->resize(600, 600);
 
-        $webpImage =
-
         $thubnail->save(public_path('images/thumbnails/' . $imageName));
         // Save the image name and path to the database
         $cropImage->image = 'images/thumbnails/' . $imageName;
